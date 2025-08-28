@@ -1,0 +1,65 @@
+{
+    "name": "regression",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "Regression_Model",
+        "args": {
+            "input_dim":20
+        }
+    },
+    "train_data_loader": {
+        "type": "CSVDataLoader",
+        "args":{
+            "data_dir": "data/covid_train.csv",
+            "batch_size": 300,
+            "shuffle": true,
+            "k_folds": 6,
+            "num_workers": 10,
+            "label":"tested_positive",
+            "k_feats":20,
+            "feats_path":"saved/feats/feats.json",
+            "mode":"train"
+        }
+    },
+    "test_data_loader": {
+        "type": "CSVDataLoader",
+        "args":{
+            "data_dir": "data/covid_test.csv",
+            "batch_size": 128,
+            "shuffle": true,
+            "num_workers": 10,
+            "feats_path":"saved/feats/feats.json",
+            "mode":"test"
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 1e-3,
+            "weight_decay": 1e-3,
+            "amsgrad": true
+        }
+    },
+    "loss": "MSE_loss",
+    "metrics": [
+        
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 50,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 1000,
+        "save_dir": "saved/",
+        "save_period": 10,
+        "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 300,
+        "tensorboard": true
+    },
+    "resume": "saved/models/regression/0827_192843/model_best.pth" 
+}
