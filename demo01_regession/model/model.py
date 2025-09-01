@@ -27,13 +27,14 @@ class Regression_Model(BaseModel):
         super(Regression_Model, self).__init__()
         self.layers = nn.Sequential(
             nn.Linear(input_dim, 20),
-            nn.ReLU(),
-            nn.Linear(20, 20),
+            # nn.BatchNorm1d(20),
             nn.ReLU(),
             nn.Linear(20, 10),
+            # nn.BatchNorm1d(10),
             nn.ReLU(),
             nn.Linear(10, 1)
         )
+
 
     def forward(self, x):
         x = self.layers(x)

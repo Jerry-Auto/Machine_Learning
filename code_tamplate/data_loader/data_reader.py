@@ -172,3 +172,37 @@ class CSVDataReader(BaseDataReader):
             raise ValueError("特征选择结果为空")
         if self._feat_names and any(i >= len(self._feat_names) for i in self._selected_feat_indices):
             raise ValueError("特征索引超出范围")
+        
+class NPYDataReader(BaseDataReader):
+    def __init__(self,
+        data_path: str,
+        label_path: str,
+        label_col: Optional[str] = None,
+        header: bool = True,
+        feature_select_mode: str = 'regression',
+        k_features: Optional[int] = None):
+        self.data_path = Path(data_path)
+        super().__init__(data_path)
+
+
+    def load_data(self):
+        """加载并返回完整数据集"""
+        self._raw_data = self._read_raw_data()
+        self._feature_data=self._select_features()
+        return self._feature_data
+        # return self._preprocess(self._feature_data)
+    
+
+    def _read_raw_data(self):
+        train = np.load(self.data_path + 'train_11.npy')
+        train_label = np.load(self.data_path + 'train_label_11.npy')
+        raise NotImplementedError
+    
+    def _preprocess(self, data):
+        """数据预处理钩子（可选重载）"""
+        return data  # 默认不做处理
+
+
+    def _select_features(self):
+        """子类必须实现的具体特征选择逻辑"""
+        raise NotImplementedError

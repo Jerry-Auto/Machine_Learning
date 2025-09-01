@@ -1,0 +1,57 @@
+{
+    "name": "classification",
+    "n_gpu": 1,
+    "arch": {
+        "type": "Classifier",
+        "args": {}
+    },
+    "train_data_loader": {
+        "type": "NPYDataload",
+        "args": {
+            "data_dir": "data/train_11.npy",
+            "label_dir": "data/train_label_11.npy",
+            "batch_size": 300,
+            "shuffle": true,
+            "k_folds": 5,
+            "num_workers": 10,
+            "mode": "train"
+        }
+    },
+    "test_data_loader": {
+        "type": "NPYDataload",
+        "args": {
+            "data_dir": "data/test_11.npy",
+            "batch_size": 128,
+            "shuffle": true,
+            "num_workers": 10,
+            "mode": "test"
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "lr": 0.001,
+            "weight_decay": 0.001,
+            "amsgrad": true
+        }
+    },
+    "loss": "CrossEntropy_loss",
+    "metrics": [],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 50,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 20,
+        "save_dir": "saved/",
+        "save_period": 1,
+        "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 300,
+        "tensorboard": true
+    },
+    "resume": "saved/models/regression/0827_192843/model_best.pth"
+}

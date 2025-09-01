@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 import torch
+import numpy as np
 
 """ 
 自定义数据集,继承自Dataset,重写getitem和len方法 
@@ -39,3 +40,4 @@ class CovidDataset(Dataset):
     
     def __len__(self):
         return len(self.x)
+    

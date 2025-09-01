@@ -14,7 +14,7 @@
             "data_dir": "data/covid_train.csv",
             "batch_size": 300,
             "shuffle": true,
-            "k_folds": 6,
+            "k_folds": 5,
             "num_workers": 10,
             "label":"tested_positive",
             "k_feats":20,
@@ -38,7 +38,7 @@
         "args":{
             "lr": 1e-3,
             "weight_decay": 1e-3,
-            "amsgrad": true
+            "amsgrad":true
         }
     },
     "loss": "MSE_loss",

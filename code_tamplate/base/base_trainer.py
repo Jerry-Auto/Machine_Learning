@@ -27,7 +27,7 @@ class BaseTrainer:
             self.mnt_mode = 'off'
             self.mnt_best = 0
         else:
-            self.mnt_mode, self.mnt_metric = self.monitor.split()
+            self.mnt_mode, self.mnt_metric = self.monitor.split()#self.mnt_metric是val_loss
             assert self.mnt_mode in ['min', 'max']
 
             self.mnt_best = inf if self.mnt_mode == 'min' else -inf
@@ -56,7 +56,7 @@ class BaseTrainer:
         """
         raise NotImplementedError
 
-    def train(self):
+    def train(self,k_th_fold=None):
         """
         Full training logic
         """
@@ -85,7 +85,7 @@ class BaseTrainer:
                 try:
                     # check whether model performance improved or not, according to specified metric(mnt_metric)
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
-                               (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
+                               (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)#self.mnt_metric是val_loss
                 except KeyError:
                     self.logger.warning("Warning: Metric '{}' is not found. "
                                         "Model performance monitoring is disabled.".format(self.mnt_metric))
@@ -101,16 +101,17 @@ class BaseTrainer:
 
                 if not_improved_count > self.early_stop:
                     self.logger.info("Validation performance didn\'t improve for {} epochs. "
-                                     "Training stops.".format(self.early_stop))
+                                     "Training stops. Best loss:{}".format(self.early_stop,self.mnt_best))
                     break
 
             if epoch % self.save_period == 0:
-                self._save_checkpoint(epoch, save_best=best)
+                self._save_checkpoint(epoch, save_best=best,k_th_fold=k_th_fold)
+            
+        return self.mnt_best
 
-    def _save_checkpoint(self, epoch, save_best=False):
+    def _save_checkpoint(self, epoch,k_th_fold,save_best=False):
         """
         Saving checkpoints
-
         :param epoch: current epoch number
         :param log: logging information of the epoch
         :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
@@ -124,11 +125,17 @@ class BaseTrainer:
             'monitor_best': self.mnt_best,
             'config': self.config
         }
-        filename = str(self.checkpoint_dir / 'checkpoint-epoch{}.pth'.format(epoch))
+        if k_th_fold==None:
+            filename = str(self.checkpoint_dir / 'checkpoint-epoch{}.pth'.format(epoch))
+        else :
+            filename = str(self.checkpoint_dir / 'checkpoint-fold{}-epoch{}.pth'.format(k_th_fold,epoch))
         torch.save(state, filename)
         # self.logger.info("Saving checkpoint: {} ...".format(filename))
         if save_best:
-            best_path = str(self.checkpoint_dir / 'model_best.pth')
+            if k_th_fold==None:
+                best_path = str(self.checkpoint_dir / 'model_best.pth')
+            else :
+                best_path = str(self.checkpoint_dir / 'fold{}-model_best.pth'.format(k_th_fold))
             torch.save(state, best_path)
             # self.logger.info("Saving current best: model_best.pth ...")
 

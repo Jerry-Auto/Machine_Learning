@@ -94,9 +94,14 @@ class My_Model(nn.Module):
         # TODO: modify model's structure, be aware of dimensions.
         self.layers = nn.Sequential(
             nn.Linear(input_dim, config['layer'][0]),
+            # nn.BatchNorm1d(config['layer'][0]),
             nn.ReLU(),
             nn.Linear(config['layer'][0], config['layer'][1]),
+            # nn.BatchNorm1d(config['layer'][0]),
             nn.ReLU(),
+            # nn.Linear(config['layer'][0], config['layer'][1]),
+            # nn.BatchNorm1d(config['layer'][0]),
+            # nn.ReLU(),
             nn.Linear(config['layer'][1], 1)
         )
 
@@ -221,8 +226,8 @@ def trainer(train_loader, valid_loader, model, config, device):
 
         if early_stop_count >= config['early_stop']:
             print('Best loss {:.3f}...'.format(best_loss))
-            print('\n在'+early_stop_count+'次参数更新后，模型损失未下降，该fold训练结束！')
-            break
+            print(f'在{early_stop_count}次参数更新后，模型损失未下降，该fold训练结束！')
+            return best_loss
     return best_loss
 
 # %% [markdown]
@@ -257,7 +262,7 @@ config = {
     'n_epochs': 1000,    # Number of epochs.
     'batch_size': 300,
     'learning_rate': 1e-3,
-    'weight_decay': 1e-5,
+    'weight_decay': 1e-3,
     'early_stop': 500,        # If model has not improved for this many consecutive epochs, stop training.
     'save_path': './models/model.ckpt',  # Your model will be saved here.
     'no_select_all': True,    # Whether to use all features.
@@ -304,6 +309,7 @@ def objective(trial):
     valid_scores = []
 
     for fold in range(k):
+        
         # Data split
         valid_data = training_data[num_valid_samples * fold:
                                 num_valid_samples * (fold + 1)]
@@ -329,13 +335,14 @@ def objective(trial):
                                                 CovidDataset(x_test)
 
         # Pytorch data loader loads pytorch dataset into batches.
-        p_m=False;
+        p_m=False
         train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=p_m)
         valid_loader = DataLoader(valid_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=p_m)
         test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False, pin_memory=p_m)
         
         model = My_Model(input_dim=x_train.shape[1]).to(device) # put your model and data on the same computation device.
         valid_score = trainer(train_loader, valid_loader, model, config, device)
+        print('fold {:^3} with the best loss: {:^6}...'.format(fold+1,valid_score))
         valid_scores.append(valid_score)
         
         if not config['no_k_cross']:

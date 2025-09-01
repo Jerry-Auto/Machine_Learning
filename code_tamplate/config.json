@@ -1,32 +1,49 @@
 {
-    "name": "Mnist_LeNet",
+    "name": "regression",
     "n_gpu": 1,
 
     "arch": {
-        "type": "MnistModel",
-        "args": {}
+        "type": "Regression_Model",
+        "args": {
+            "input_dim":20
+        }
     },
-    "data_loader": {
-        "type": "MnistDataLoader",
+    "train_data_loader": {
+        "type": "CSVDataLoader",
         "args":{
-            "data_dir": "data/",
+            "data_dir": "data/covid_train.csv",
+            "batch_size": 300,
+            "shuffle": true,
+            "k_folds": 5,
+            "num_workers": 10,
+            "label":"tested_positive",
+            "k_feats":20,
+            "feats_path":"saved/feats/feats.json",
+            "mode":"train"
+        }
+    },
+    "test_data_loader": {
+        "type": "CSVDataLoader",
+        "args":{
+            "data_dir": "data/covid_test.csv",
             "batch_size": 128,
             "shuffle": true,
-            "validation_split": 0.1,
-            "num_workers": 2
+            "num_workers": 10,
+            "feats_path":"saved/feats/feats.json",
+            "mode":"test"
         }
     },
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 0.001,
-            "weight_decay": 0,
-            "amsgrad": true
+            "lr": 1e-3,
+            "weight_decay": 1e-3,
+            "amsgrad":true
         }
     },
-    "loss": "nll_loss",
+    "loss": "MSE_loss",
     "metrics": [
-        "accuracy", "top_k_acc"
+        
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -36,15 +53,13 @@
         }
     },
     "trainer": {
-        "epochs": 100,
-
+        "epochs": 1000,
         "save_dir": "saved/",
-        "save_period": 1,
+        "save_period": 10,
         "verbosity": 2,
-        
         "monitor": "min val_loss",
-        "early_stop": 10,
-
+        "early_stop": 300,
         "tensorboard": true
-    }
+    },
+    "resume": "saved/models/regression/0827_192843/model_best.pth" 
 }

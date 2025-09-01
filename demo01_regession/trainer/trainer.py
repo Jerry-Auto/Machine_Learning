@@ -133,8 +133,8 @@ class Trainer(BaseTrainer):
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
+            self.writer.add_histogram(name, p.detach().cpu().float(), bins='auto')
 
-            self.writer.add_histogram(name, p, bins='auto')
             #返回所有指标的均值
         return self.valid_metrics.result()
     

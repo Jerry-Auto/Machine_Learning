@@ -17,41 +17,48 @@ torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
-
 def main(config):
     logger = config.get_logger('train')
 
     # setup data_loader instances
-    data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_validation()
-
-    # build model architecture, then print to console
-    model = config.init_obj('arch', module_arch)
-    logger.info(model)
-
-    # prepare for (multi-device) GPU training
-    device, device_ids = prepare_device(config['n_gpu'])
-    model = model.to(device)
-    if len(device_ids) > 1:
-        model = torch.nn.DataParallel(model, device_ids=device_ids)
+    init_data_loader = config.init_obj('train_data_loader', module_data)
+    valid_scores = []  # 记录 valid_loss
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
-    # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
-    trainable_params = filter(lambda p: p.requires_grad, model.parameters())
-    optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
-    lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    for fold in range(config['train_data_loader']["args"]['k_folds']):
 
-    trainer = Trainer(model, criterion, metrics, optimizer,
-                      config=config,
-                      device=device,
-                      data_loader=data_loader,
-                      valid_data_loader=valid_data_loader,
-                      lr_scheduler=lr_scheduler)
+        valid_data_loader,data_loader=init_data_loader.K_fold_split(fold)
+        # build model architecture, then print to console
+        model = config.init_obj('arch', module_arch)
+        logger.info(model)
 
-    trainer.train()
+        # prepare for (multi-device) GPU training
+        device, device_ids = prepare_device(config['n_gpu'])
+        model = model.to(device)
+        if len(device_ids) > 1:
+            model = torch.nn.DataParallel(model, device_ids=device_ids)
+
+        # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
+        trainable_params = filter(lambda p: p.requires_grad, model.parameters())
+        optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
+        #lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+
+        trainer = Trainer(model, criterion, metrics, optimizer,
+                        config=config,
+                        device=device,
+                        data_loader=data_loader,
+                        valid_data_loader=valid_data_loader,
+                        #lr_scheduler=lr_scheduler,
+                        len_epoch=None)
+
+        valid_score=trainer.train(fold+1)
+        valid_scores.append(valid_score)
+        if valid_score > 2:
+            print(f'在第{fold+1}折上欠拟合') # 提前终止，减少计算资源
+    print(f'valid_scores: {valid_scores}')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 import torch
+import numpy as np
 
 """ 
 自定义数据集,继承自Dataset,重写getitem和len方法 
@@ -37,5 +38,22 @@ class CovidDataset(Dataset):
         else:
             return self.x[idx], self.y[idx]
     
+    def __len__(self):
+        return len(self.x)
+    
+class TIMITDataset(Dataset):
+    def __init__(self,x,y=None):
+        self.x=torch.from_numpy(x).float()
+        if y is not None:
+            y=y.astype(np.int)
+            self.label=torch.LongTensor(y)
+        else:
+            self.label=None
+    def __getitem__(self, index):
+        if self.label is not None:
+            return self.x(index),self.label(index)
+        else:
+            return self.x(index)
+        
     def __len__(self):
         return len(self.x)

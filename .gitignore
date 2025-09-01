@@ -5,6 +5,7 @@ __pycache__/
 *.so
 .Python
 build/
+log/
 develop-eggs/
 dist/
 downloads/
@@ -26,17 +27,17 @@ MANIFEST
 logs/
 *.out
 *.log.*
-events.out.tfevents.*  # TensorBoard日志
+events.out.tfevents.*
 
 # 模型文件
-*.pth
+checkpoint*.pth
 *.pt
 *.ckpt
 *.h5
 *.onnx
 
 # 数据集相关
-
+*.npy
 
 # Jupyter Notebook
 .ipynb_checkpoints
